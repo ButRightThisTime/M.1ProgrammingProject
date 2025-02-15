@@ -1,31 +1,107 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.11.35312.102
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GradeBookAverager", "GradeBookAverager\GradeBookAverager.vcxproj", "{FEF3A645-352C-4044-9D00-F9AD477EEFCC}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FEF3A645-352C-4044-9D00-F9AD477EEFCC}.Debug|x64.ActiveCfg = Debug|x64
-		{FEF3A645-352C-4044-9D00-F9AD477EEFCC}.Debug|x64.Build.0 = Debug|x64
-		{FEF3A645-352C-4044-9D00-F9AD477EEFCC}.Debug|x86.ActiveCfg = Debug|Win32
-		{FEF3A645-352C-4044-9D00-F9AD477EEFCC}.Debug|x86.Build.0 = Debug|Win32
-		{FEF3A645-352C-4044-9D00-F9AD477EEFCC}.Release|x64.ActiveCfg = Release|x64
-		{FEF3A645-352C-4044-9D00-F9AD477EEFCC}.Release|x64.Build.0 = Release|x64
-		{FEF3A645-352C-4044-9D00-F9AD477EEFCC}.Release|x86.ActiveCfg = Release|Win32
-		{FEF3A645-352C-4044-9D00-F9AD477EEFCC}.Release|x86.Build.0 = Release|Win32
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {657B7CEE-8531-407F-899F-C5C7D944546C}
-	EndGlobalSection
-EndGlobal
+// GradeBookAverager.cpp : This file contains the 'main' function. Program execution begins and ends there.
+//
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <array>
+using namespace std;
+
+int* extractGrades(string line, int* array);
+int averageGrades(int* grades);
+void displayChild(string,int*,int);
+char makeLetter(int num);
+
+const int MAX_GRADES_PER_STUDENT = 10;
+const int MAX_NUMBER_STUDENTS = 10;
+int totalStudents = 0;
+int main()
+{
+    
+    string path;
+    cout << "enter full path to file with double slashes: "; // (eg. C:\\Users\\b7ers\\Downloads\\StudentGrades.txt)
+    cin >> path;
+    string line;
+    ifstream myf(path);
+    string names[MAX_NUMBER_STUDENTS];
+    int gradebook[MAX_NUMBER_STUDENTS][MAX_GRADES_PER_STUDENT];
+    int averages[MAX_NUMBER_STUDENTS];
+    int gradebookCounter = 0;
+    if (myf.is_open()) {
+        while (getline(myf, line)) {
+			string name = line.substr(0, line.find(" "));
+            line.erase(0, line.find(" ")+1);
+            names[gradebookCounter] = name;
+            int grades[MAX_GRADES_PER_STUDENT];
+            extractGrades(line,grades);
+            for (int i = 0; i < MAX_GRADES_PER_STUDENT; i++) {
+                gradebook[gradebookCounter][i] = grades[i];
+            }
+            averages[gradebookCounter] = averageGrades(grades);
+            gradebookCounter++;
+            totalStudents++;
+        }
+        myf.close();
+    }
+    else cout << "Couldn't open that file try running the program again and entering a valid path";
+    while (true) {
+        cout << "_____Students_____" << endl;
+        for (int i = 0; i < MAX_NUMBER_STUDENTS; i++) {
+            cout << i << ". " << names[i] << endl;
+        }
+        cout << "Enter the number next to a students name to see their grades and average letter(-1 to quit): ";
+        int num;
+        cin >> num;
+        if (num == -1) {
+            return 0;
+        }
+        if (num < totalStudents) {
+            displayChild(names[num], gradebook[num], averages[num]);
+        }
+        else cout << "\nStudent Slot not fillied please select again\n";
+    }
+    return 2;
+}
+int* extractGrades(string line,int* grades) {
+    for (int i = 0; i < MAX_GRADES_PER_STUDENT; i++) {
+        grades[i] = -1;
+    }
+    int i = 0;
+    while (line.find(" ") != string::npos) {
+        grades[i] = stoi(line.substr(0,line.find(" ")));
+        line.erase(0, line.find(" ") + 1);
+        i++;
+    }
+    grades[i] = stoi(line.substr(0, line.length()));
+   
+    return grades;
+}
+void displayChild(string name,int*gradeBook, int average){ 
+    cout << "-------------------------------------------\n";
+    cout << "Name: " << name << " | Average: " << average << " | Letter Earned: " << makeLetter(average) << endl << "Gradebook: ";
+    for(int i = 0; i < MAX_GRADES_PER_STUDENT; i++) {
+            cout << gradeBook[i] << " ";
+    }
+        cout << endl;
+    cout << "-------------------------------------------\n";
+}
+int averageGrades(int* grades) {
+    int total = 0;
+    int count = 0;
+    for (int i = 0; i < MAX_GRADES_PER_STUDENT; i++) {
+        if (grades[i] != -1) {
+            total += grades[i];
+            count++;
+        }
+    }
+    if (count == 0) {
+        return -1;
+    }
+    return total / count;
+}
+char makeLetter(int num) {
+    if (num > 89) return'A';
+    if (num > 79)  return'B';
+    if (num > 69)  return'C';
+    if (num > 59) return'D';
+    else return 'F';
+}
